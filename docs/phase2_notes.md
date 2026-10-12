@@ -16,8 +16,8 @@ Inspection of `data/sales_history.csv` across the 40 SKUs revealed three distinc
 
 | Group | Count | Identification Rule | Target Strategy |
 |---|---|---|---|
-| **Regular** | 34 | Dense history, zero-sales weeks < 30% | Pooled Direct Multi-Horizon Gradient Boosted Trees (LightGBM) |
-| **Intermittent** | 4 | Zero-sales weeks $\ge$ 30% (`ELE-1006`, `GRP-1043`, `BRK-1088`, `ELE-1031`) | Syntetos-Boylan Approximation (SBA) intermittent demand model |
+| **Regular** | 34 | Dense history, zero-sales weeks $\le$ 35% | Pooled Direct Multi-Horizon Gradient Boosted Trees (LightGBM) |
+| **Intermittent** | 4 | Zero-sales weeks > 35% (`ELE-1006`, `GRP-1043`, `BRK-1088`, `ELE-1031`) | Syntetos-Boylan Approximation (SBA) intermittent demand model |
 | **New SKUs** | 2 | History < 12 weeks (`BRK-1105`, `CHN-1006` with ~6 weeks) | Adaptive Damped Recent Mean with Promo Multiplier |
 
 ### Why Direct Multi-Horizon vs. Recursive Forecasting?

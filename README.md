@@ -98,7 +98,7 @@ python smoke_test.py --base-url http://localhost:8000 --track aiml
 ## LLM Provider & Architecture
 
 - **Provider**: **Groq Cloud**
-- **Default Model**: `openai/gpt-oss-120b` (specified in `dealerdesk/settings.py:101`)
+- **Default Model**: `openai/gpt-oss-120b` (specified in `dealerdesk/settings.py:98`)
 - **Fallback Models**: `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`
 - **Retrieval Engine**: Pure Python in-memory BM25 index with token normalization (splitting model codes like `Duke390` $\rightarrow$ `duke 390`), automotive synonym mapping, and vehicle fitment scoring (+15 for direct match, +4 for universal, -50 for conflicting vehicles). Zero cold-start latency (< 3 ms index build).
 - **Grounding Verifier**: Verifies all cited SKUs against the database; enforces live tool execution during the turn; corrects or removes ungrounded prices and stocks.

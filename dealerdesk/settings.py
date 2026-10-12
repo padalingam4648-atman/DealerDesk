@@ -1,7 +1,7 @@
 """DealerDesk settings. Everything environment-specific comes from environment variables.
 
-Required: DATABASE_URL (PostgreSQL). Also read: SUPPLIER_API_URL, SUPPLIER_API_KEY and one LLM key
-(GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY or GROQ_API_KEY).
+Required: DATABASE_URL (PostgreSQL). Also read: SUPPLIER_API_URL, SUPPLIER_API_KEY and GROQ_API_KEY
+(for the Phase 3 Dealer Assistant on Groq Cloud).
 For local development you can put them in a .env file at the repo root (never commit it).
 """
 import os
@@ -94,9 +94,6 @@ REST_FRAMEWORK = {
 
 # ---- Assignment settings --------------------------------------------------------------
 DATA_DIR = BASE_DIR / "data"
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 ASSISTANT_MODEL = os.environ.get("ASSISTANT_MODEL", "openai/gpt-oss-120b")
 SUPPLIER_API_URL = os.environ.get("SUPPLIER_API_URL", "http://127.0.0.1:8099")
