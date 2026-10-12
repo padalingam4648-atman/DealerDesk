@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "dealers",
     "orders",
     "forecasts",
+    "assistant",
 ]
 
 MIDDLEWARE = [
@@ -97,5 +98,6 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+ASSISTANT_MODEL = os.environ.get("ASSISTANT_MODEL", "openai/gpt-oss-120b")
 SUPPLIER_API_URL = os.environ.get("SUPPLIER_API_URL", "http://127.0.0.1:8099")
 SUPPLIER_API_KEY = os.environ.get("SUPPLIER_API_KEY", "")
