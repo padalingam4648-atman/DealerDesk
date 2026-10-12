@@ -8,6 +8,7 @@ urlpatterns = [
     path("api/", include("catalog.urls")),
     path("api/", include("dealers.urls")),
     path("api/", include("orders.urls")),
+    path("api/", include("forecasts.urls")),
     # Fallback to ensure all unrecognized /api/ endpoints conform to contract error format
     re_path(r"^api/.*", api_not_found),
 ]
