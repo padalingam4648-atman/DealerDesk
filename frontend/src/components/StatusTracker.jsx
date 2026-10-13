@@ -112,7 +112,7 @@ export default function StatusTracker({ status = 'DRAFT', compact = false }) {
       </div>
 
       <p className="tracker-caption">
-        Draft orders are not reserved. Confirmation happens in the dealer portal.
+        Draft orders are not reserved. Confirm, dispatch, deliver and cancel are available through the API.
       </p>
     </div>
   );
