@@ -5,6 +5,7 @@ import { useDealer } from '../context/DealerContext';
 import { createOrder } from '../api';
 import Money from '../components/Money';
 import { IconCart } from '../components/Icons';
+import StatusTracker, { OrderNumberDisplay } from '../components/StatusTracker';
 
 export default function Cart({ onOpenProduct }) {
   const navigate = useNavigate();
@@ -63,35 +64,53 @@ export default function Cart({ onOpenProduct }) {
       {createdOrder && (
         <div
           style={{
-            background: 'var(--status-in-stock-bg)',
-            border: '1px solid var(--status-in-stock-border)',
-            borderRadius: '4px',
-            padding: '16px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '6px',
+            padding: '20px',
+            marginBottom: '24px',
+            boxShadow: 'var(--shadow-subtle)',
           }}
         >
-          <div>
-            <div style={{ color: 'var(--status-in-stock)', fontWeight: 600 }}>
-              Draft Order Created Successfully
-            </div>
-            <div className="text-sm" style={{ marginTop: '2px' }}>
-              Order Reference:{' '}
-              <span className="text-mono" style={{ fontWeight: 600 }}>
-                {createdOrder.order_number}
-              </span>{' '}
-              for {selectedDealer?.name || `Dealer #${selectedDealerId}`}.
-            </div>
-          </div>
-          <button
-            type="button"
-            className="btn btn-primary btn-sm"
-            onClick={() => navigate('/orders')}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '16px',
+              flexWrap: 'wrap',
+              gap: '12px',
+            }}
           >
-            View in Orders
-          </button>
+            <div>
+              <div
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: 'var(--status-in-stock)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  marginBottom: '4px',
+                }}
+              >
+                Draft Order Created Successfully
+              </div>
+              <OrderNumberDisplay orderNumber={createdOrder.order_number} />
+              <div className="text-xs text-muted" style={{ marginTop: '4px' }}>
+                Dealer: {selectedDealer ? `${selectedDealer.dealer_code} — ${selectedDealer.name}` : `Dealer #${selectedDealerId}`}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary btn-sm btn-pill"
+              onClick={() => navigate('/orders')}
+            >
+              View in Orders List →
+            </button>
+          </div>
+
+          <StatusTracker status={createdOrder.status} />
         </div>
       )}
 

@@ -5,6 +5,7 @@ import DataTable from '../components/DataTable';
 import Money from '../components/Money';
 import StatusBadge from '../components/StatusBadge';
 import { IconPrinter, IconClose } from '../components/Icons';
+import StatusTracker, { OrderNumberDisplay } from '../components/StatusTracker';
 
 export default function Orders({ onOpenProduct }) {
   const { dealers, selectedDealerId } = useDealer();
@@ -152,8 +153,8 @@ export default function Orders({ onOpenProduct }) {
       header: 'Status',
       accessor: 'status',
       align: 'center',
-      width: '110px',
-      render: (row) => <StatusBadge type="order" status={row.status} />,
+      width: '130px',
+      render: (row) => <StatusTracker status={row.status} compact={true} />,
     },
     {
       header: 'Action',
@@ -305,14 +306,12 @@ export default function Orders({ onOpenProduct }) {
           >
             <div className="drawer-header">
               <div>
-                <span className="text-mono" style={{ color: 'var(--accent)', fontWeight: 600 }}>
-                  {selectedOrderNo}
-                </span>
-                <h2 style={{ fontSize: '16px', marginTop: '2px' }}>
-                  {orderDetail ? `Order Status: ${orderDetail.status}` : 'Loading...'}
+                <OrderNumberDisplay orderNumber={selectedOrderNo} />
+                <h2 style={{ fontSize: '15px', marginTop: '4px', fontWeight: 600 }}>
+                  Order Details
                 </h2>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
@@ -326,6 +325,7 @@ export default function Orders({ onOpenProduct }) {
                   type="button"
                   className="btn btn-secondary btn-sm"
                   onClick={() => setSelectedOrderNo(null)}
+                  aria-label="Close drawer"
                 >
                   <IconClose size={16} />
                 </button>
@@ -337,6 +337,9 @@ export default function Orders({ onOpenProduct }) {
                 <div className="text-muted text-sm">Loading order lines...</div>
               ) : orderDetail ? (
                 <>
+                  {/* Status Progress Tracker */}
+                  <StatusTracker status={orderDetail.status} />
+
                   <div style={{ background: 'var(--bg-surface-subtle)', padding: '12px', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '13px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                       <div>
@@ -350,7 +353,7 @@ export default function Orders({ onOpenProduct }) {
                         <div>{formatDate(orderDetail.created_at)}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-muted">Status</div>
+                        <div className="text-xs text-muted">Current Status</div>
                         <div style={{ marginTop: '2px' }}>
                           <StatusBadge type="order" status={orderDetail.status} />
                         </div>
@@ -448,49 +451,46 @@ export default function Orders({ onOpenProduct }) {
             </div>
           </div>
 
-          <table style={{ width: '100%', marginBottom: '20px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '16px', fontSize: '12px' }}>
             <thead>
-              <tr>
-                <th>SKU</th>
-                <th>Description</th>
-                <th style={{ textAlign: 'right' }}>Unit Price</th>
-                <th style={{ textAlign: 'center' }}>Qty</th>
-                <th style={{ textAlign: 'right' }}>Subtotal</th>
-                <th style={{ textAlign: 'right' }}>GST (18%)</th>
-                <th style={{ textAlign: 'right' }}>Total</th>
+              <tr style={{ borderBottom: '1px solid #000' }}>
+                <th style={{ textAlign: 'left', padding: '6px' }}>SKU</th>
+                <th style={{ textAlign: 'left', padding: '6px' }}>Part</th>
+                <th style={{ textAlign: 'right', padding: '6px' }}>Unit Price</th>
+                <th style={{ textAlign: 'center', padding: '6px' }}>Qty</th>
+                <th style={{ textAlign: 'right', padding: '6px' }}>Subtotal</th>
+                <th style={{ textAlign: 'right', padding: '6px' }}>GST (18%)</th>
+                <th style={{ textAlign: 'right', padding: '6px' }}>Total</th>
               </tr>
             </thead>
             <tbody>
-              {orderDetail.items?.map((it, i) => (
-                <tr key={i}>
-                  <td>{it.sku}</td>
-                  <td>{it.name}</td>
-                  <td style={{ textAlign: 'right' }}>Rs. {it.unit_price}</td>
-                  <td style={{ textAlign: 'center' }}>{it.quantity}</td>
-                  <td style={{ textAlign: 'right' }}>Rs. {it.line_subtotal}</td>
-                  <td style={{ textAlign: 'right' }}>Rs. {it.line_tax}</td>
-                  <td style={{ textAlign: 'right' }}>Rs. {it.line_total}</td>
+              {orderDetail.items?.map((it, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #ddd' }}>
+                  <td style={{ padding: '6px', fontFamily: 'monospace' }}>{it.sku}</td>
+                  <td style={{ padding: '6px' }}>{it.name}</td>
+                  <td style={{ padding: '6px', textAlign: 'right' }}>{it.unit_price}</td>
+                  <td style={{ padding: '6px', textAlign: 'center' }}>{it.quantity}</td>
+                  <td style={{ padding: '6px', textAlign: 'right' }}>{it.line_subtotal}</td>
+                  <td style={{ padding: '6px', textAlign: 'right' }}>{it.line_tax}</td>
+                  <td style={{ padding: '6px', textAlign: 'right' }}>{it.line_total}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          <div style={{ float: 'right', width: '280px', borderTop: '1px solid #333', paddingTop: '8px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <div style={{ width: '250px', marginLeft: 'auto', fontSize: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
               <span>Subtotal:</span>
-              <span>Rs. {orderDetail.subtotal}</span>
+              <span>{orderDetail.subtotal}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
               <span>GST Total:</span>
-              <span>Rs. {orderDetail.tax_total}</span>
+              <span>{orderDetail.tax_total}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', fontSize: '14px', borderTop: '1px solid #000', paddingTop: '4px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderTop: '1px solid #000', fontWeight: 'bold' }}>
               <span>Grand Total:</span>
               <span>Rs. {orderDetail.grand_total}</span>
             </div>
-          </div>
-          <div style={{ clear: 'both', paddingTop: '40px', fontSize: '11px', color: '#666' }}>
-            This is a computer-generated trade document from VIKMO DealerDesk ERP.
           </div>
         </div>
       )}
