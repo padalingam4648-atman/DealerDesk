@@ -1,0 +1,217 @@
+/* Data Table - Dense 40px rows, sticky header, row hover, no zebra */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--font-size-sm);
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--bg-surface-subtle);
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 var(--space-3);
+  height: 36px;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.data-table td {
+  height: 40px;
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.data-table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--bg-surface-hover);
+}
+
+.data-table tbody tr.selected {
+  background-color: var(--accent-subtle);
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 6px;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.badge-in-stock {
+  color: var(--status-in-stock);
+  background-color: var(--status-in-stock-bg);
+  border-color: var(--status-in-stock-border);
+}
+
+.badge-low-stock {
+  color: var(--status-low-stock);
+  background-color: var(--status-low-stock-bg);
+  border-color: var(--status-low-stock-border);
+}
+
+.badge-out-stock {
+  color: var(--status-out-stock);
+  background-color: var(--status-out-stock-bg);
+  border-color: var(--status-out-stock-border);
+}
+
+.badge-draft {
+  color: var(--status-draft);
+  background-color: var(--status-draft-bg);
+  border-color: var(--status-draft-border);
+}
+
+.badge-confirmed {
+  color: var(--accent);
+  background-color: var(--accent-subtle);
+  border-color: var(--border-color);
+}
+
+.badge-dispatched {
+  color: #1E40AF;
+  background-color: #EFF6FF;
+  border-color: #DBEAFE;
+}
+
+.badge-delivered {
+  color: #15803D;
+  background-color: #F0FDF4;
+  border-color: #DCFCE7;
+}
+
+.badge-cancelled {
+  color: #6B7280;
+  background-color: #F3F4F6;
+  border-color: #E5E7EB;
+}
+
+/* SKU Chip */
+.sku-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 1px 5px;
+  background-color: var(--bg-surface-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xs);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.sku-chip:hover {
+  background-color: var(--accent-subtle);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+/* Skeleton Loading (No Layout Shift) */
+.skeleton-row td div {
+  height: 14px;
+  background: linear-gradient(90deg, #EBE8E1 25%, #F5F3ED 50%, #EBE8E1 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-xs);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Product Detail Drawer */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(28, 27, 25, 0.3);
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer {
+  width: 440px;
+  max-width: 90vw;
+  height: 100%;
+  background-color: var(--bg-surface);
+  border-left: 1px solid var(--border-color);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.drawer-header {
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background-color: var(--bg-surface-hover);
+}
+
+.drawer-body {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+}
+
+.drawer-footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-surface-hover);
+}
+
+/* Sparkline Inline SVG */
+.sparkline-svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Stock vs Reorder Bar */
+.reorder-bar-container {
+  width: 100%;
+  min-width: 90px;
+  background-color: var(--border-subtle);
+  height: 6px;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.reorder-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}

@@ -13,16 +13,17 @@ VIKMO DealerDesk is an automotive dealership operations platform integrating a h
 - **Part A1 — Backend Core**: PostgreSQL models, migrations, REST API endpoints for spare parts catalogue, live warehouse inventory, dealership management, and DRAFT purchase order creation (`catalog`, `dealers`, `orders`, `core`).
 - **Part C — Dealer Assistant (GenAI)**: Conversational parts and replenishment assistant with function calling, BM25 retrieval, real-time database grounding, prompt injection defenses, and draft order creation (`assistant`).
 - **Part D — Demand Forecasting & Reorder Suggestions (ML)**: Statistical multi-horizon demand forecasting pipeline, temporal rolling-origin backtesting, and live safety stock / reorder calculation endpoints (`ml`, `forecasts`).
+- **Part E — Frontend Web Application**: Production React 18 + Vite trade portal served same-origin at `/portal/` featuring landing page with live statistics, parts catalogue, draft cart with 18% GST ledger math, orders ledger, ML reorder recommendations, and Groq assistant (`frontend`).
 
 ### Unattempted Tracks (As Permitted for AI/ML Track)
 - **Part A2 — Full Order Engine**: Confirmed/dispatched transitions, credit limit checks, and concurrency locks were not implemented beyond DRAFT orders.
 - **Part B — Supplier Sync Feed**: The mock supplier sync client and feed reconciliation were not attempted.
-- **Part E — Frontend Web Application**: No frontend dashboard was attempted; all functionality is exposed via clean REST APIs.
 
 ---
 
 ## Tech Stack
 - **Backend Core**: Python 3.12, Django 4.2+, Django REST Framework, PostgreSQL (`psycopg[binary]`, `dj-database-url`).
+- **Frontend Portal**: React 18, React Router 6 (`HashRouter`), Vite, pure Vanilla CSS design system, zero external UI/chart/icon libraries.
 - **GenAI / Assistant**: Groq Python SDK (`groq`), native function calling, BM25 text retrieval, token normalization.
 - **Forecasting & ML Pipeline**: LightGBM, scikit-learn, pandas, numpy (isolated in `ml/requirements-ml.txt`).
 - **DevOps & Verification**: Docker (PostgreSQL container), standard library unittest, custom contract smoke tester.
@@ -76,6 +77,25 @@ python manage.py seed_data
 # 3. Start development server
 python manage.py runserver 0.0.0.0:8000 --noreload
 ```
+
+---
+
+## Frontend
+The dealer trade portal and counter staff desk is built with **React 18 + Vite** (JavaScript) in `frontend/`. It is served same-origin directly by Django at `/portal/`.
+
+- **Access URL**: `http://localhost:8000/portal/` (Landing page at `#/`, catalogue at `#/catalogue`)
+- **Dependencies**: Restricted strictly to `react`, `react-dom`, and `react-router-dom` (`HashRouter`).
+- **Styling**: Single shared `:root` design token system in Vanilla CSS, no UI kits, no Tailwind, no external icon fonts.
+- **Serving**: Handled same-origin in Django core (`core.views.portal_serve`) without requiring Node.js or CORS at runtime.
+
+### How to Rebuild
+```bash
+cd frontend
+npm ci
+npm run build
+```
+
+> **Note on Build Artifacts:** The grader does not execute `npm`. Therefore, the compiled production bundle (`frontend/dist/`) is committed to the repository so the portal loads immediately upon running `python manage.py runserver 0.0.0.0:8000 --noreload` on a fresh checkout. `node_modules` is excluded via `.gitignore`.
 
 ---
 
@@ -155,6 +175,11 @@ DealerDesk/
 ├── core/                  # Health endpoint and idempotent seed_data management command
 ├── common/                # Custom exception handler, money formatters, pagination
 ├── dealerdesk/            # Project configuration, root settings, URL configuration
+├── frontend/              # React 18 + Vite frontend SPA
+│   ├── dist/              # Committed production build served by Django at /portal/
+│   ├── src/               # React components, pages, context, and styles
+│   ├── package.json       # Allowed dependencies (react, react-dom, react-router-dom)
+│   └── vite.config.js     # Base /portal/ and API dev proxy config
 ├── ml/                    # Forecasting features, backtesting, and training pipeline
 │   ├── features.py        # Vectorized lag/festive feature engineering
 │   ├── evaluate.py        # Rolling-origin backtester and baseline evaluations
