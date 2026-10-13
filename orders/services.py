@@ -283,7 +283,7 @@ def create_draft_order_with_idempotency(
         return existing.order, True
 
     # 2. Atomic creation of order and idempotency record inside the exact same transaction
-    for attempt in range(20):
+    for attempt in range(50):
         try:
             order = create_draft_order(
                 dealer_or_id=dealer_or_id,
@@ -295,7 +295,7 @@ def create_draft_order_with_idempotency(
 
         except IntegrityError:
             # Concurrent race on unique constraint: another thread committed or is committing
-            time.sleep(0.01 * (attempt + 1))
+            time.sleep(0.02 * (attempt % 5 + 1))
             try:
                 rec = (
                     IdempotencyRecord.objects.select_related("order")
@@ -311,11 +311,11 @@ def create_draft_order_with_idempotency(
                     return rec.order, True
             except OperationalError:
                 pass
-            if attempt == 19:
+            if attempt == 49:
                 raise
 
         except OperationalError:
-            time.sleep(0.01 * (attempt + 1))
+            time.sleep(0.02 * (attempt % 5 + 1))
             try:
                 rec = (
                     IdempotencyRecord.objects.select_related("order")
@@ -331,7 +331,7 @@ def create_draft_order_with_idempotency(
                     return rec.order, True
             except OperationalError:
                 pass
-            if attempt == 19:
+            if attempt == 49:
                 raise
 
     raise RuntimeError("Failed to resolve idempotent order creation race condition.")
@@ -344,7 +344,7 @@ def edit_draft_order(order_or_number: Order | str, items: list[dict]) -> Order:
     """
     cleaned_items, products_by_sku = validate_and_clean_items(items)
 
-    for attempt in range(20):
+    for attempt in range(50):
         try:
             with transaction.atomic():
                 order = get_order_for_update(order_or_number)
@@ -365,9 +365,9 @@ def edit_draft_order(order_or_number: Order | str, items: list[dict]) -> Order:
                 order.save(update_fields=["updated_at"])
                 return order
         except OperationalError:
-            if attempt == 19:
+            if attempt == 49:
                 raise
-            time.sleep(0.01 * (attempt + 1))
+            time.sleep(0.02 * (attempt % 5 + 1))
 
 
 def confirm_order(order_or_number: Order | str) -> Order:
@@ -376,7 +376,7 @@ def confirm_order(order_or_number: Order | str) -> Order:
     All-or-nothing stock validation, atomic stock deduction, and permanent unit_price locking.
     Inventory rows are locked with select_for_update in consistent product_id order to avoid deadlocks.
     """
-    for attempt in range(20):
+    for attempt in range(50):
         try:
             with transaction.atomic():
                 order = get_order_for_update(order_or_number)
@@ -432,16 +432,16 @@ def confirm_order(order_or_number: Order | str) -> Order:
                 order.save(update_fields=["status", "updated_at"])
                 return order
         except OperationalError:
-            if attempt == 19:
+            if attempt == 49:
                 raise
-            time.sleep(0.01 * (attempt + 1))
+            time.sleep(0.02 * (attempt % 5 + 1))
 
 
 def dispatch_order(order_or_number: Order | str) -> Order:
     """
     POST /api/orders/{order_number}/dispatch/: CONFIRMED -> DISPATCHED.
     """
-    for attempt in range(20):
+    for attempt in range(50):
         try:
             with transaction.atomic():
                 order = get_order_for_update(order_or_number)
@@ -450,16 +450,16 @@ def dispatch_order(order_or_number: Order | str) -> Order:
                 order.save(update_fields=["status", "updated_at"])
                 return order
         except OperationalError:
-            if attempt == 19:
+            if attempt == 49:
                 raise
-            time.sleep(0.01 * (attempt + 1))
+            time.sleep(0.02 * (attempt % 5 + 1))
 
 
 def deliver_order(order_or_number: Order | str) -> Order:
     """
     POST /api/orders/{order_number}/deliver/: DISPATCHED -> DELIVERED.
     """
-    for attempt in range(20):
+    for attempt in range(50):
         try:
             with transaction.atomic():
                 order = get_order_for_update(order_or_number)
@@ -468,9 +468,9 @@ def deliver_order(order_or_number: Order | str) -> Order:
                 order.save(update_fields=["status", "updated_at"])
                 return order
         except OperationalError:
-            if attempt == 19:
+            if attempt == 49:
                 raise
-            time.sleep(0.01 * (attempt + 1))
+            time.sleep(0.02 * (attempt % 5 + 1))
 
 
 def cancel_order(order_or_number: Order | str) -> Order:
@@ -480,7 +480,7 @@ def cancel_order(order_or_number: Order | str) -> Order:
     - CONFIRMED -> CANCELLED (stock restored to inventory exactly once)
     - Any other status -> INVALID_TRANSITION
     """
-    for attempt in range(20):
+    for attempt in range(50):
         try:
             with transaction.atomic():
                 order = get_order_for_update(order_or_number)
@@ -515,6 +515,6 @@ def cancel_order(order_or_number: Order | str) -> Order:
                 order.save(update_fields=["status", "stock_restored", "updated_at"])
                 return order
         except OperationalError:
-            if attempt == 19:
+            if attempt == 49:
                 raise
-            time.sleep(0.01 * (attempt + 1))
+            time.sleep(0.02 * (attempt % 5 + 1))

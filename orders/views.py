@@ -24,7 +24,7 @@ def get_order_with_relations(order_id: int) -> Order:
     """
     Retrieve an order with relations for serialization, with retry on transient SQLite lock collisions.
     """
-    for attempt in range(25):
+    for attempt in range(50):
         try:
             return (
                 Order.objects.select_related("dealer")
@@ -32,9 +32,9 @@ def get_order_with_relations(order_id: int) -> Order:
                 .get(id=order_id)
             )
         except OperationalError:
-            if attempt == 24:
+            if attempt == 49:
                 raise
-            time.sleep(0.01 * (attempt + 1))
+            time.sleep(0.02 * (attempt % 5 + 1))
 
 
 class OrderListCreateView(APIView):
