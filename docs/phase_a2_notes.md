@@ -106,7 +106,7 @@ Confirmation performs an atomic check against `Inventory.quantity` for all order
 ### Exact-Once Stock Restoration
 - Model field `Order.stock_restored = models.BooleanField(default=False)` tracks whether physical stock has been credited back to inventory ([orders/models.py:34](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L34)).
 - Cancelling a `DRAFT` order sets status to `CANCELLED` but **never** modifies inventory stock (drafts never reserve stock).
-- Cancelling a `CONFIRMED` order restores `inventory.quantity += item.quantity` and sets `order.stock_restored = True` in a single atomic transaction ([orders/services.py:382-446](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/services.py#L382-L446)).
+- Cancelling a `CONFIRMED` order restores `inventory.quantity += item.quantity` and sets `order.stock_restored = True` in a single atomic transaction ([orders/services.py:476-521](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/services.py#L476-L521)).
 - A second cancellation attempt is blocked by `validate_transition` (HTTP 409 `INVALID_TRANSITION`), and the `stock_restored` flag acts as a defense-in-depth guard against double restoration.
 
 ---
@@ -115,7 +115,7 @@ Confirmation performs an atomic check against `Inventory.quantity` for all order
 
 To prevent catalog price changes from mutating past or active purchase orders:
 - While an order is `DRAFT`, `OrderItem.unit_price` is calculated dynamically against current catalogue prices.
-- When an order is `CONFIRMED` (or `CANCELLED` from `DRAFT`), `OrderItem.unit_price` is permanently snapshotted from `product.price` into the database ([orders/services.py:270-275](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/services.py#L270-L275)).
+- When an order is `CONFIRMED` (or `CANCELLED` from `DRAFT`), `OrderItem.unit_price` is permanently snapshotted from `product.price` into the database ([orders/services.py:428-429](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/services.py#L428-L429), [orders/services.py:509-513](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/services.py#L509-L513)).
 - If catalogue prices are later altered via supplier sync or admin edits, confirmed orders retain their original contracted `unit_price`, `subtotal`, `tax_total`, and `grand_total`.
 
 ---
@@ -124,7 +124,7 @@ To prevent catalog price changes from mutating past or active purchase orders:
 
 Clients can send the `Idempotency-Key` HTTP header on order creation (API Contract Section 7.5).
 
-### Implementation Details ([orders/services.py:175-225](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/services.py#L175-L225))
+### Implementation Details ([orders/services.py:250-337](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/services.py#L250-L337))
 - **Model**: `IdempotencyRecord` stores `key` (unique), `request_hash` (SHA-256 of canonicalized JSON request payload), `order` (FK CASCADE), and `created_at`.
 - **First Request**: Creates both the `Order` and `IdempotencyRecord` atomically. Returns HTTP 201 Created.
 - **Replay (Identical Payload)**: Detects matching `key` and matching `request_hash`. Returns the existing order with HTTP 200 OK.
