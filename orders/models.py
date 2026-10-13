@@ -29,6 +29,9 @@ class Order(models.Model):
         default="DRAFT",
         db_index=True,
     )
+    # Flag tracking whether stock has been restored to inventory upon cancellation.
+    # Ensures stock restoration executes exactly once and protects against double restoration.
+    stock_restored = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -58,7 +61,7 @@ class OrderItem(models.Model):
         related_name="order_items",
     )
     quantity = models.PositiveIntegerField()
-    # unit_price is null while DRAFT; a later phase locks it on confirm.
+    # unit_price is null while DRAFT; locked on confirm to current product price permanently.
     unit_price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -95,3 +98,31 @@ class OrderNumberCounter(models.Model):
 
     def __str__(self):
         return f"{self.date}: {self.last_sequence}"
+
+
+class IdempotencyRecord(models.Model):
+    """
+    Records Idempotency-Key payloads and resulting orders to enforce
+    exact-once order creation semantics under concurrent and repeated requests.
+    """
+    key = models.CharField(max_length=255, unique=True, db_index=True)
+    request_hash = models.CharField(
+        max_length=64,
+        help_text="SHA-256 hash of the canonicalized JSON request payload.",
+    )
+    # CASCADE: Idempotency records are strictly tied to the created order lifecycle.
+    # If an order is purged (e.g. test cleanup), the idempotency record cascades with it.
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="idempotency_records",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Idempotency Record"
+
+    def __str__(self):
+        return f"{self.key} -> {self.order.order_number}"
+
