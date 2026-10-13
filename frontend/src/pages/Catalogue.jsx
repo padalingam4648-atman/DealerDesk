@@ -1,19 +1,26 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchProducts } from '../api';
 import DataTable from '../components/DataTable';
 import Money from '../components/Money';
 import StatusBadge from '../components/StatusBadge';
 import ProductDrawer from '../components/ProductDrawer';
-import { IconSearch } from '../components/Icons';
+import { IconSearch, IconCheck, IconCart } from '../components/Icons';
 import { useCart } from '../context/CartContext';
 
 export default function Catalogue({ onOpenProduct, selectedSku, onCloseProduct }) {
-  const { addToCart } = useCart();
+  const navigate = useNavigate();
+  const { items, addToCart, removeFromCart, totalLines, totalUnits, subtotal, taxTotal } = useCart();
   const [products, setProducts] = useState([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(true);
+
+  // Stepper quantity state per SKU
+  const [rowQuantities, setRowQuantities] = useState({});
+  // Inline "Added to draft" temporary visual state per SKU (~1.5s)
+  const [justAdded, setJustAdded] = useState({});
 
   // Filters
   const [search, setSearch] = useState('');
@@ -35,7 +42,11 @@ export default function Catalogue({ onOpenProduct, selectedSku, onCloseProduct }
   // "/" Keyboard shortcut to focus search
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === '/' && document.activeElement !== searchInputRef.current && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      if (
+        e.key === '/' &&
+        document.activeElement !== searchInputRef.current &&
+        !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)
+      ) {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
@@ -91,6 +102,19 @@ export default function Catalogue({ onOpenProduct, selectedSku, onCloseProduct }
     'Lubricants',
     'Suspension',
   ];
+
+  const handleQtyChange = (sku, val) => {
+    const parsed = Math.max(1, parseInt(val, 10) || 1);
+    setRowQuantities((prev) => ({ ...prev, [sku]: parsed }));
+  };
+
+  const handleAddRow = (row, qty) => {
+    addToCart(row, qty);
+    setJustAdded((prev) => ({ ...prev, [row.sku]: true }));
+    setTimeout(() => {
+      setJustAdded((prev) => ({ ...prev, [row.sku]: false }));
+    }, 1500);
+  };
 
   const columns = useMemo(() => [
     {
@@ -155,22 +179,102 @@ export default function Catalogue({ onOpenProduct, selectedSku, onCloseProduct }
     {
       header: 'Action',
       align: 'right',
-      width: '110px',
-      render: (row) => (
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            addToCart(row, 1);
-          }}
-          title="Add 1 unit to draft order"
-        >
-          Add to draft
-        </button>
-      ),
+      width: '230px',
+      render: (row) => {
+        const stock = typeof row.stock === 'number' ? row.stock : parseInt(row.stock, 10) || 0;
+        const isOutOfStock = stock <= 0;
+        const qty = rowQuantities[row.sku] || 1;
+        const isShort = !isOutOfStock && qty > stock;
+        const shortBy = qty - stock;
+        const cartItem = items.find((it) => it.sku === row.sku);
+        const inCart = Boolean(cartItem);
+        const isJustAdded = Boolean(justAdded[row.sku]);
+
+        if (isOutOfStock) {
+          return (
+            <span className="badge badge-out-stock" title="Warehouse stock is depleted">
+              Out of stock
+            </span>
+          );
+        }
+
+        return (
+          <div
+            className="row-action-cell"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Inline Added Confirmation */}
+            {isJustAdded ? (
+              <span className="row-added-pill">
+                <IconCheck size={13} />
+                <span>Added to draft</span>
+              </span>
+            ) : inCart ? (
+              <div className="row-in-draft-group">
+                <span className="row-in-draft-label">In draft ({cartItem.quantity})</span>
+                <button
+                  type="button"
+                  className="row-remove-link"
+                  onClick={() => removeFromCart(row.sku)}
+                  title="Remove from draft"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="row-stepper-group">
+                {/* Compact Stepper */}
+                <div className="compact-stepper">
+                  <button
+                    type="button"
+                    className="stepper-btn"
+                    onClick={() => handleQtyChange(row.sku, qty - 1)}
+                    disabled={qty <= 1}
+                    aria-label="Decrease quantity"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    className="stepper-input tabular-nums"
+                    value={qty}
+                    onChange={(e) => handleQtyChange(row.sku, e.target.value)}
+                    aria-label="Quantity"
+                  />
+                  <button
+                    type="button"
+                    className="stepper-btn"
+                    onClick={() => handleQtyChange(row.sku, qty + 1)}
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* Primary Add to Draft Button */}
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm row-add-btn"
+                  onClick={() => handleAddRow(row, qty)}
+                  title={`Add ${qty} units to draft`}
+                >
+                  Add to draft
+                </button>
+              </div>
+            )}
+
+            {/* Amber Short Stock Warning (drafts allowed, does not reserve stock) */}
+            {isShort && !isJustAdded && (
+              <div className="row-short-alert">
+                Short by {shortBy} {shortBy === 1 ? 'unit' : 'units'}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
-  ], [onOpenProduct, addToCart]);
+  ], [onOpenProduct, rowQuantities, justAdded, items, addToCart, removeFromCart]);
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
 
@@ -312,6 +416,38 @@ export default function Catalogue({ onOpenProduct, selectedSku, onCloseProduct }
           </button>
         </div>
       </div>
+
+      {/* Sticky Bottom Draft Summary Bar (Hidden when cart is empty) */}
+      {totalLines > 0 && (
+        <aside className="catalogue-draft-bar" role="region" aria-label="Draft order summary">
+          <div className="draft-bar-left">
+            <span className="draft-bar-icon-wrap">
+              <IconCart size={16} />
+            </span>
+            <div className="draft-bar-info">
+              <span>
+                Draft Order: <strong>{totalLines} {totalLines === 1 ? 'line' : 'lines'}</strong> ({totalUnits} units)
+              </span>
+              <span className="draft-bar-dot">•</span>
+              <span>
+                Est. Subtotal: <strong><Money amount={subtotal} /></strong>
+              </span>
+              <span className="draft-bar-tax text-muted text-xs">
+                (GST 18%: <Money amount={taxTotal} />)
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-primary btn-sm btn-pill"
+            onClick={() => navigate('/cart')}
+          >
+            <span>Review draft</span>
+            <span>→</span>
+          </button>
+        </aside>
+      )}
 
       {/* Slide-out Product Drawer */}
       {selectedSku && (
