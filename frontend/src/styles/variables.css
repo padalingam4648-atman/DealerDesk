@@ -1,27 +1,36 @@
 :root {
-  /* Surface and Background Colors */
-  --bg-page: #F6F5F1;
+  /* Surface and Background Colors (Light theme only) */
+  --bg-page: #F8F9FA;
   --bg-surface: #FFFFFF;
-  --bg-surface-hover: #F9F8F6;
-  --bg-surface-subtle: #F0EFEA;
-  --bg-code: #ECEAE4;
+  --bg-surface-hover: #F8FAFC;
+  --bg-surface-subtle: #F1F5F9;
+  --bg-hover-warm: #F0EFEA;
+  --bg-code: #ECEFF1;
+  --frame-border: #0F5C5A;
 
-  /* Hairline Borders */
-  --border-color: #E3E0D8;
-  --border-subtle: #EBE8E1;
-  --border-strong: #CEC9BE;
+  /* Hairline Borders and Dividers */
+  --border-color: #E2E8F0;
+  --border-subtle: #F1F5F9;
+  --border-strong: #CBD5E1;
+  --border-dotted: #CBD5E1;
 
   /* Typography Colors */
-  --text-primary: #1C1B19;
-  --text-muted: #6B675F;
-  --text-subtle: #8E8A81;
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
   --text-inverted: #FFFFFF;
+  --text-statement-muted: #94A3B8;
 
-  /* Accent: Deep Teal */
+  /* Accent Colors (Teal Palette) */
   --accent: #0F5C5A;
   --accent-hover: #0A4543;
-  --accent-subtle: #EBF3F3;
-  --accent-light: #167472;
+  --accent-subtle: #E3F0EE;
+  --accent-border: #C8E1DD;
+  --accent-underline: #0F5C5A;
+  --accent-indicator: #DC2626;
+  --accent-cta: #0F5C5A;
+  --accent-cta-hover: #0A4543;
 
   /* Semantic Status Colors */
   --status-in-stock: #15803D;
@@ -41,27 +50,45 @@
   --status-draft-border: #E2E8F0;
 
   --status-confirmed: #0F5C5A;
-  --status-confirmed-bg: #EBF3F3;
-  --status-confirmed-border: #D1E4E4;
+  --status-confirmed-bg: #E3F0EE;
+  --status-confirmed-border: #C8E1DD;
 
-  /* Typography */
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  --status-dispatched: #1E40AF;
+  --status-dispatched-bg: #EFF6FF;
+  --status-dispatched-border: #DBEAFE;
+
+  --status-delivered: #15803D;
+  --status-delivered-bg: #F0FDF4;
+  --status-delivered-border: #DCFCE7;
+
+  --status-cancelled: #B91C1C;
+  --status-cancelled-bg: #FEF2F2;
+  --status-cancelled-border: #FEE2E2;
+
+  /* Font Stacks */
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Segoe UI Mono", Menlo, Consolas, monospace;
 
-  /* Exact Type Scale: 12 / 14 / 16 / 20 / 28 px */
+  /* Type Scale */
+  --font-size-2xs: 11px;
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-md: 16px;
   --font-size-lg: 20px;
   --font-size-xl: 28px;
+  --font-size-hero: 38px;
 
-  --line-height-tight: 1.25;
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.35;
   --line-height-normal: 1.5;
 
-  /* Small Radii (4-6px) */
+  /* Radii */
   --radius-xs: 3px;
   --radius-sm: 4px;
-  --radius-md: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
 
   /* 8px Spacing Grid */
   --space-1: 4px;
@@ -75,9 +102,14 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* Restrained transitions: 120-160ms */
-  --transition-fast: 120ms ease;
-  --transition-normal: 160ms ease;
+  /* Shadows */
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-frame: 0 4px 20px rgba(0, 0, 0, 0.06);
+
+  /* Transitions */
+  --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 160ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Focus Ring */
   --focus-ring: 2px solid #0F5C5A;

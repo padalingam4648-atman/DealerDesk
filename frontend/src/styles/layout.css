@@ -1,138 +1,130 @@
-/* App Layout Structure */
+/* App Layout Structure with Top Navigation */
 .portal-layout {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background-color: var(--bg-page);
 }
 
-/* Left Sidebar */
-.portal-sidebar {
-  width: 220px;
-  flex-shrink: 0;
-  background-color: var(--bg-surface);
-  border-right: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
+/* Fixed Top Bar Navigation */
+.portal-topbar {
   position: sticky;
   top: 0;
-  height: 100vh;
-  z-index: 20;
+  z-index: 30;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-subtle);
+  width: 100%;
 }
 
-.sidebar-brand {
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--border-color);
+.topbar-main-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-height: 54px;
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.brand-title {
+/* Brand Wordmark */
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.topbar-brand-title {
   font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
 
 .brand-badge {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
   text-transform: uppercase;
-  background-color: var(--bg-surface-subtle);
+  background-color: var(--accent-subtle);
   color: var(--accent);
-  padding: 1px 5px;
+  padding: 2px 6px;
   border-radius: var(--radius-xs);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--accent-border);
+  letter-spacing: 0.05em;
 }
 
-.sidebar-nav {
-  padding: var(--space-3) var(--space-2);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-
-.nav-link {
+/* Top Bar Navigation Links */
+.topbar-nav {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2) var(--space-3);
+  gap: 4px;
+  flex: 1;
+  margin-left: var(--space-4);
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.topbar-nav::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.topbar-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: var(--font-size-sm);
   font-weight: 500;
   text-decoration: none;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
 }
 
-.nav-link-content {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.nav-link:hover {
-  background-color: var(--bg-surface-hover);
+.topbar-nav-link:hover {
+  background-color: var(--bg-hover-warm);
   color: var(--text-primary);
   text-decoration: none;
 }
 
-.nav-link.active {
-  background-color: var(--accent-subtle);
+/* Active Nav Item: teal text on pale teal (#E3F0EE) with 2px teal underline */
+.topbar-nav-link.active {
   color: var(--accent);
+  background-color: var(--accent-subtle);
+  border-bottom: 2px solid var(--accent);
   font-weight: 600;
+}
+
+.topbar-nav-link:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .nav-badge {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 1px 6px;
-  border-radius: 10px;
+  border-radius: var(--radius-pill);
   background-color: var(--accent);
   color: var(--text-inverted);
 }
 
-.sidebar-footer {
-  padding: var(--space-3);
-  border-top: 1px solid var(--border-color);
-  font-size: var(--font-size-xs);
-  color: var(--text-muted);
-}
-
-/* Portal Main Content Area */
-.portal-main-area {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-/* Top Bar */
-.portal-topbar {
-  height: 48px;
-  background-color: var(--bg-surface);
-  border-bottom: 1px solid var(--border-color);
-  padding: 0 var(--space-4);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  position: sticky;
-  top: 0;
-  z-index: 15;
-}
-
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
+/* Right Section: Utilities & Dealer Selector */
 .topbar-right {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  flex-shrink: 0;
 }
 
 .dealer-selector-wrap {
@@ -144,12 +136,13 @@
 .dealer-label {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .dealer-select {
-  height: 30px;
+  height: 32px;
   padding: 0 var(--space-2);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
@@ -157,37 +150,61 @@
   font-size: var(--font-size-xs);
   color: var(--text-primary);
   font-weight: 500;
-  max-width: 260px;
+  max-width: 250px;
+}
+
+.dealer-meta-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .dealer-meta-pill {
   font-size: 11px;
+  font-weight: 500;
   color: var(--text-muted);
   background-color: var(--bg-surface-subtle);
-  border: 1px solid var(--border-subtle);
-  padding: 2px 6px;
+  border: 1px solid var(--border-color);
+  padding: 2px 7px;
   border-radius: var(--radius-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .search-shortcut-pill {
   font-size: 11px;
   color: var(--text-muted);
   background-color: var(--bg-surface-subtle);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-color);
   padding: 2px 6px;
   border-radius: var(--radius-xs);
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
+  white-space: nowrap;
 }
 
 .search-shortcut-key {
   font-family: var(--font-mono);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
+  font-size: 11px;
 }
 
-/* Page Content Container */
+/* Content Area & Assistant Dock */
+.portal-body-container {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.portal-main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .portal-content {
   padding: var(--space-6);
   max-width: 1200px;
@@ -223,49 +240,31 @@
   display: flex;
   flex-direction: column;
   position: sticky;
-  top: 48px;
-  height: calc(100vh - 48px);
+  top: 54px;
+  height: calc(100vh - 54px);
 }
 
-/* Mobile responsive styles */
-.mobile-nav-toggle {
-  display: none;
-  background: none;
-  border: 1px solid var(--border-color);
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
+/* Mobile responsive rules */
+@media (max-width: 980px) {
+  .dealer-meta-group {
+    display: none;
+  }
 }
 
 @media (max-width: 860px) {
-  .portal-layout {
-    flex-direction: column;
-  }
-
-  .portal-sidebar {
-    position: static;
-    width: 100%;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .portal-sidebar.collapsed .sidebar-nav {
-    display: none;
-  }
-
-  .mobile-nav-toggle {
-    display: inline-flex;
-  }
-
-  .portal-topbar {
+  .topbar-main-row {
     flex-wrap: wrap;
-    height: auto;
+    min-height: auto;
     padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
   }
 
-  .topbar-left, .topbar-right {
-    flex-wrap: wrap;
+  .topbar-nav {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    padding: var(--space-1) 0;
+    border-top: 1px solid var(--border-subtle);
   }
 
   .assistant-dock {
@@ -280,5 +279,33 @@
 
   .portal-content {
     padding: var(--space-3);
+  }
+}
+
+@media (max-width: 390px) {
+  .topbar-main-row {
+    padding: var(--space-2);
+  }
+
+  .topbar-brand-title {
+    font-size: 14px;
+  }
+
+  .topbar-nav {
+    gap: 2px;
+  }
+
+  .topbar-nav-link {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .dealer-select {
+    max-width: 140px;
+    font-size: 11px;
+  }
+
+  .search-shortcut-pill {
+    display: none;
   }
 }

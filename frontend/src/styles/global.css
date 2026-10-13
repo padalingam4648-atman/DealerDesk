@@ -23,26 +23,27 @@ html, body {
   flex-direction: column;
 }
 
-/* Accessible visible focus */
+/* Accessible focus ring */
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: var(--focus-offset);
 }
 
-/* Typography Scale */
+/* Typography Hierarchy */
 h1 {
   font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-weight: 700;
   line-height: var(--line-height-tight);
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 h2 {
   font-size: var(--font-size-lg);
   font-weight: 600;
-  line-height: var(--line-height-tight);
+  line-height: var(--line-height-snug);
   color: var(--text-primary);
+  letter-spacing: -0.015em;
 }
 
 h3 {
@@ -52,7 +53,8 @@ h3 {
 }
 
 p {
-  color: var(--text-primary);
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
 }
 
 a {
@@ -66,7 +68,7 @@ a:hover {
   color: var(--accent-hover);
 }
 
-/* Tabular numerals & SKU styling */
+/* Tabular Numerals & Ledger Alignments */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
@@ -89,15 +91,44 @@ a:hover {
   color: var(--text-muted);
 }
 
+.text-subtle {
+  color: var(--text-subtle);
+}
+
 .text-xs {
   font-size: var(--font-size-xs);
+}
+
+.text-2xs {
+  font-size: var(--font-size-2xs);
 }
 
 .text-sm {
   font-size: var(--font-size-sm);
 }
 
-/* Standard Buttons - Clean, rectangular with subtle 4px radius */
+/* Section Eyebrow matching the reference design */
+.section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.eyebrow-square {
+  width: 6px;
+  height: 6px;
+  background-color: var(--accent-indicator);
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -107,11 +138,11 @@ a:hover {
   padding: 0 var(--space-3);
   font-family: var(--font-body);
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: 600;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -121,14 +152,14 @@ a:hover {
 }
 
 .btn-primary {
-  background-color: var(--accent);
+  background-color: var(--accent-cta);
   color: var(--text-inverted);
-  border-color: var(--accent);
+  border-color: var(--accent-cta);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background-color: var(--accent-cta-hover);
+  border-color: var(--accent-cta-hover);
 }
 
 .btn-secondary {
@@ -140,6 +171,13 @@ a:hover {
 .btn-secondary:hover:not(:disabled) {
   background-color: var(--bg-surface-hover);
   border-color: var(--border-strong);
+}
+
+.btn-pill {
+  border-radius: var(--radius-pill);
+  padding: 0 var(--space-5);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
 }
 
 .btn-sm {
@@ -155,11 +193,13 @@ a:hover {
   padding: 0;
   height: auto;
   font-size: inherit;
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .btn-link:hover:not(:disabled) {
   text-decoration: underline;
+  color: var(--accent-hover);
 }
 
 /* Inputs and Selects */
@@ -184,11 +224,11 @@ a:hover {
   color: var(--text-subtle);
 }
 
-/* Landing headline motion (single 200ms fade-in, disabled under prefers-reduced-motion) */
-@keyframes headlineFadeIn {
+/* Subtle motion <= 200ms with prefers-reduced-motion check */
+@keyframes fadeInSubtle {
   from {
     opacity: 0;
-    transform: translateY(3px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -198,6 +238,14 @@ a:hover {
 
 @media (prefers-reduced-motion: no-preference) {
   .headline-fade {
-    animation: headlineFadeIn 200ms ease-out forwards;
+    animation: fadeInSubtle 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

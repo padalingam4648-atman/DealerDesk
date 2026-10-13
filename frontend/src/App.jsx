@@ -8,22 +8,19 @@ import Cart from './pages/Cart';
 import Orders from './pages/Orders';
 import Reorder from './pages/Reorder';
 import Assistant from './pages/Assistant';
-import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
 import AssistantDrawer from './components/AssistantDrawer';
 import ProductDrawer from './components/ProductDrawer';
 
 /**
- * PortalLayout: Shell for all internal ERP portal views
+ * PortalLayout: Unified shell with top navigation
  * Features:
- * - Left sticky navigation sidebar
- * - Top bar with dealer selector and hotkey cues
- * - Central ledger content area (max-width ~1200px)
+ * - Fixed top navigation bar with wordmark, nav links, dealer selector, and cart badge
+ * - Full-width central content area (max-width ~1200px, centered)
  * - Docked right assistant drawer (collapsible)
  * - Global product detail drawer for any SKU clicked
  */
 function PortalLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [drawerSku, setDrawerSku] = useState(null);
   const location = useLocation();
@@ -33,21 +30,15 @@ function PortalLayout() {
 
   return (
     <div className="portal-layout">
-      {/* Sidebar Navigation */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
+      {/* Top Fixed Navigation Bar */}
+      <TopBar
+        onToggleAssistant={() => setAssistantOpen(!assistantOpen)}
+        assistantOpen={assistantOpen}
       />
 
-      {/* Main Area */}
-      <div className="portal-main-area">
-        <TopBar
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onToggleAssistant={() => setAssistantOpen(!assistantOpen)}
-          assistantOpen={assistantOpen}
-        />
-
-        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+      {/* Main Content Area */}
+      <div className="portal-body-container">
+        <div className="portal-main-area">
           {/* Main ERP Page Content */}
           <main className="portal-content" role="main">
             <Routes>
@@ -80,17 +71,17 @@ function PortalLayout() {
               <Route path="*" element={<Navigate to="/catalogue" replace />} />
             </Routes>
           </main>
-
-          {/* Docked Collapsible Right Assistant Panel */}
-          {assistantOpen && !isAssistantPage && (
-            <aside className="assistant-dock">
-              <AssistantDrawer
-                onClose={() => setAssistantOpen(false)}
-                onSelectSku={(sku) => setDrawerSku(sku)}
-              />
-            </aside>
-          )}
         </div>
+
+        {/* Docked Collapsible Right Assistant Panel */}
+        {assistantOpen && !isAssistantPage && (
+          <aside className="assistant-dock" aria-label="Docked Assistant Panel">
+            <AssistantDrawer
+              onClose={() => setAssistantOpen(false)}
+              onSelectSku={(sku) => setDrawerSku(sku)}
+            />
+          </aside>
+        )}
       </div>
 
       {/* Global Product Detail Drawer */}
