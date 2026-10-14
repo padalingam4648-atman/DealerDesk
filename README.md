@@ -231,5 +231,5 @@ DealerDesk/
 ---
 
 ## Video Walkthrough
-Video: `<VIDEO_LINK>`
+Video: https://drive.google.com/drive/folders/1HyAYEHBsL_gPQpi4yut_kiPX16N7PqIQ?usp=sharing
 
