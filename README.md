@@ -11,12 +11,12 @@ VIKMO DealerDesk is an automotive dealership operations platform integrating a h
 
 ### Completed Tracks & Components
 - **Part A1 — Backend Core**: PostgreSQL models, migrations, REST API endpoints for spare parts catalogue, live warehouse inventory, dealership management, and DRAFT purchase order creation (`catalog`, `dealers`, `orders`, `core`).
+- **Part A2 — Full Order Engine**: Complete order lifecycle state machine (`DRAFT -> CONFIRMED -> DISPATCHED -> DELIVERED` and `DRAFT / CONFIRMED -> CANCELLED`), deterministic row-level locking via `select_for_update` ordered by `product_id` to prevent deadlocks, all-or-nothing stock verification, exact-once stock restoration on cancellation, permanent price lock snapshot on confirmation, sequential daily order numbering (`ORD-YYYYMMDD-NNNN`), and header-based idempotency (`Idempotency-Key`) with unique constraint deduplication (`orders`).
 - **Part C — Dealer Assistant (GenAI)**: Conversational parts and replenishment assistant with function calling, BM25 retrieval, real-time database grounding, prompt injection defenses, and draft order creation (`assistant`).
 - **Part D — Demand Forecasting & Reorder Suggestions (ML)**: Statistical multi-horizon demand forecasting pipeline, temporal rolling-origin backtesting, and live safety stock / reorder calculation endpoints (`ml`, `forecasts`).
 - **Part E — Frontend Web Application**: Production React 18 + Vite trade portal served same-origin at `/portal/` featuring landing page with live statistics, parts catalogue, draft cart with 18% GST ledger math, orders ledger, ML reorder recommendations, and Groq assistant (`frontend`).
 
 ### Unattempted Tracks (As Permitted for AI/ML Track)
-- **Part A2 — Full Order Engine**: Confirmed/dispatched transitions, credit limit checks, and concurrency locks were not implemented beyond DRAFT orders.
 - **Part B — Supplier Sync Feed**: The mock supplier sync client and feed reconciliation were not attempted.
 
 ---
@@ -105,13 +105,26 @@ npm run build
 ```bash
 python manage.py test
 ```
-*Executes all 30 test cases across Core, Forecasts, and Assistant in ~10 seconds.*
+*Executes all 47 test cases across Core, Forecasts, Assistant, and Order Engine (including concurrency and idempotency) in ~15 seconds.*
 
 ### Run Official Smoke Test
 ```bash
 python smoke_test.py --base-url http://localhost:8000 --track aiml
 ```
 *Verifies all 10 checks across Core endpoints, Assistant contract response, and Forecasting CSV / APIs.*
+
+---
+
+## Order Engine Architecture (`orders/`)
+
+The full order lifecycle engine (Part A2) implements robust concurrency control and state management conforming strictly to API Contract Sections 7.1–7.5:
+- **State Flow**: Strict lifecycle transitions (`DRAFT -> CONFIRMED -> DISPATCHED -> DELIVERED` and `DRAFT / CONFIRMED -> CANCELLED`). Prohibited transitions reject with HTTP 409 `INVALID_TRANSITION`. Attempting to edit a non-draft order returns HTTP 409 `ORDER_LOCKED`.
+- **Concurrency & Deadlock Prevention**: Employs `transaction.atomic()` with `select_for_update()` on the `Order` row and all involved `Inventory` rows. Inventory row locks are acquired in strictly deterministic `product_id` ascending order to prevent distributed deadlocks under concurrent multi-line orders.
+- **All-or-Nothing Stock Allocation**: Before confirming, all lines are checked against available inventory. If any SKU lacks stock, no stock is deducted and HTTP 409 `INSUFFICIENT_STOCK` is returned itemizing every short line.
+- **Exact-Once Stock Restoration**: Cancelling a `CONFIRMED` order restores physical warehouse quantities exactly once via the `order.stock_restored` guard. Cancelling a `DRAFT` order modifies no stock.
+- **Permanent Price Lock**: Unit prices on `DRAFT` orders reflect live catalogue prices. Upon transition to `CONFIRMED` (or `CANCELLED` from draft), `unit_price` is permanently snapshotted into `OrderItem.unit_price`. Subsequent catalogue price changes never alter confirmed orders.
+- **Idempotency**: Clients sending an `Idempotency-Key` header on `POST /api/orders/` receive exact-once creation semantics backed by a database unique constraint. Replaying the identical payload returns the original order (HTTP 200/201); conflicting payloads return HTTP 409 `IDEMPOTENCY_CONFLICT`.
+- **Atomic Order Numbering**: Sequential `ORD-YYYYMMDD-NNNN` identifiers partitioned daily in Asia/Kolkata timezone with atomic row locking on `OrderNumberCounter`.
 
 ---
 
@@ -152,12 +165,18 @@ Outputs `ml/forecast.csv` (exactly 160 rows, 40 SKUs $\times$ 4 weeks: `2026-09-
 | `GET` | `/api/health/` | Service health status |
 | `GET` | `/api/products/` | Paginated product catalogue |
 | `GET` | `/api/products/{sku}/` | Single product details |
+| `PATCH` | `/api/products/{sku}/` | Partial product update (e.g. price) |
 | `PUT` | `/api/inventory/{sku}/` | Update physical stock for a product |
 | `GET` | `/api/dealers/` | Paginated list of dealerships |
 | `POST` | `/api/dealers/` | Register new dealership |
-| `POST` | `/api/orders/` | Create a DRAFT purchase order |
+| `POST` | `/api/orders/` | Create a DRAFT purchase order (optional `Idempotency-Key`) |
 | `GET` | `/api/orders/{order_number}/` | Retrieve purchase order by number |
+| `PUT` | `/api/orders/{order_number}/` | Replace items on a DRAFT order |
 | `GET` | `/api/orders/` | List orders (filterable by dealer/status) |
+| `POST` | `/api/orders/{order_number}/confirm/` | Confirm order with all-or-nothing stock deduction & price lock |
+| `POST` | `/api/orders/{order_number}/dispatch/` | Dispatch confirmed order |
+| `POST` | `/api/orders/{order_number}/deliver/` | Mark dispatched order as delivered |
+| `POST` | `/api/orders/{order_number}/cancel/` | Cancel draft or confirmed order (restores stock once for confirmed) |
 | `POST` | `/api/assistant/chat/` | Conversational Dealer Assistant with tool calling |
 | `GET` | `/api/forecast/{sku}/` | 4-week demand forecast for a SKU |
 | `GET` | `/api/reorder-suggestions/` | Live replenishment suggestions for 40 SKUs |
@@ -169,7 +188,7 @@ Outputs `ml/forecast.csv` (exactly 160 rows, 40 SKUs $\times$ 4 weeks: `2026-09-
 DealerDesk/
 ├── catalog/               # Products and Inventory models, views, serializers
 ├── dealers/               # Dealership profiles and credit allocation
-├── orders/                # DRAFT order management and financial arithmetic
+├── orders/                # Order engine state machine, concurrency locks, idempotency, GST arithmetic
 ├── forecasts/             # Forecast read API and live reorder suggestions engine
 ├── assistant/             # GenAI Assistant: tools, BM25 retrieval, grounding, agent loop
 ├── core/                  # Health endpoint and idempotent seed_data management command
@@ -191,6 +210,7 @@ DealerDesk/
 │   ├── phase1_notes.md    # Phase 1 backend architecture
 │   ├── phase2_notes.md    # Phase 2 ML models & backtest analysis
 │   ├── phase3_notes.md    # Phase 3 Assistant architecture & safety
+│   ├── phase_a2_notes.md  # Phase A2 Order Engine architecture & state machine
 │   └── video_script.md    # Timed 5-minute video walkthrough script
 ├── scripts/
 │   └── chat_demo.py       # Live LLM conversation scenario demonstration script
@@ -206,9 +226,12 @@ DealerDesk/
 1. **Retrieval**: Uses in-memory BM25 with synonym expansion rather than semantic vector embeddings. Highly resilient and zero-latency (< 3 ms), but sensitive to severe misspellings outside covered synonyms.
 2. **Safety Defense**: Prompt injection detection uses heuristic pattern matching. Sophisticated multi-lingual or obfuscated jailbreaks could bypass regex detectors without model-level guardrails.
 3. **Forecasting**: Intermittent demand for rare SKUs uses Syntetos-Boylan Approximation (SBA), yielding a constant weekly rate that exhibits high WAPE during zero-sales weeks despite capturing aggregated demand.
+4. **Order Engine Concurrency**: Local development runs on SQLite where table-level file locking can experience contention under high parallel thread bursts. Production runs on PostgreSQL with true row-level locking via `select_for_update()`. For SQLite development, WAL mode and connection `busy_timeout` are enabled via `orders.apps.configure_sqlite_connection` with jitter retry backoff.
+5. **Credit Limit**: Omitted from order confirmation per API Contract Sections 3 and 7.1–7.5, which do not specify credit limit checks or error codes for purchase order transitions.
 
 ---
 
 ## Video Walkthrough
 Video: `<VIDEO_LINK>`
 *(See [docs/video_script.md](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/docs/video_script.md) for the timed 5-minute spoken walkthrough script).*
+

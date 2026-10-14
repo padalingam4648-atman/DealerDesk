@@ -11,17 +11,20 @@ Our database architecture encompasses domain entities across the parts catalogue
    - **Relationship**: `product = models.OneToOneField(Product, on_delete=models.CASCADE, related_name="inventory")` ([catalog/models.py:37-41](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/catalog/models.py#L37-L41)).
    - **Reason**: Warehouse stock is an intrinsic physical attribute of a catalogue product. If a product is deleted permanently from the catalogue, its warehouse stock ledger loses all semantic meaning and must be cleaned up automatically via `CASCADE`.
 3. **`dealers.Dealer`** ([dealers/models.py:5-33](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/dealers/models.py#L5-L33)): Independent entity representing authorized dealerships, GST credentials, and credit limits.
-4. **`orders.Order`** ([orders/models.py:6-39](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L6-L39)):
+4. **`orders.Order`** ([orders/models.py:6-43](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L6-L43)):
    - **Relationship**: `dealer = models.ForeignKey(Dealer, on_delete=models.PROTECT, related_name="orders")` ([orders/models.py:21-25](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L21-L25)).
    - **Reason**: Purchase orders represent legally binding financial transactions and historical billing records. We explicitly forbid deleting a dealership profile if it has past or pending orders (`PROTECT`) to preserve audit trails and prevent orphaned financial entries.
-5. **`orders.OrderItem`** ([orders/models.py:42-83](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L42-L83)):
-   - **Relationship 1**: `order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")` ([orders/models.py:48-52](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L48-L52)). Line items are structural child elements of an order; deleting the parent order must cascade and remove its constituent items.
-   - **Relationship 2**: `product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="order_items")` ([orders/models.py:55-59](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L55-L59)). Preserves historical invoicing; deleting a catalogue product that has previously appeared on purchase orders is strictly blocked (`PROTECT`).
-6. **`orders.OrderNumberCounter`** ([orders/models.py:85-98](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L85-L98)): An independent atomic sequence counter per calendar day (IST) used for gapless sequential `ORD-YYYYMMDD-NNNN` generation.
-7. **`assistant.ChatSession`** ([assistant/models.py:5-18](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/assistant/models.py#L5-L18)):
+5. **`orders.OrderItem`** ([orders/models.py:45-86](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L45-L86)):
+   - **Relationship 1**: `order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")` ([orders/models.py:51-55](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L51-L55)). Line items are structural child elements of an order; deleting the parent order must cascade and remove its constituent items.
+   - **Relationship 2**: `product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name="order_items")` ([orders/models.py:58-62](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L58-L62)). Preserves historical invoicing; deleting a catalogue product that has previously appeared on purchase orders is strictly blocked (`PROTECT`).
+6. **`orders.OrderNumberCounter`** ([orders/models.py:88-101](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L88-L101)): An independent atomic sequence counter per calendar day (IST) used for gapless sequential `ORD-YYYYMMDD-NNNN` generation.
+7. **`orders.IdempotencyRecord`** ([orders/models.py:103-128](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L103-L128)):
+   - **Relationship**: `order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="idempotency_records")` ([orders/models.py:115-119](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/orders/models.py#L115-L119)).
+   - **Reason**: Idempotency records track client request tokens specifically for an order's creation. If an order is purged during testing, its associated deduplication keys cascade with it.
+8. **`assistant.ChatSession`** ([assistant/models.py:5-18](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/assistant/models.py#L5-L18)):
    - **Relationship**: `dealer = models.ForeignKey(Dealer, on_delete=models.PROTECT, related_name="chat_sessions")` ([assistant/models.py:12](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/assistant/models.py#L12)).
    - **Reason**: Chat sessions track procurement discussions and draft order creations. Deleting a dealership profile while it owns active conversations is protected to retain interaction logs.
-8. **`assistant.ChatMessage`** ([assistant/models.py:20-43](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/assistant/models.py#L20-L43)):
+9. **`assistant.ChatMessage`** ([assistant/models.py:20-43](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/assistant/models.py#L20-L43)):
    - **Relationship**: `session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name="messages")` ([assistant/models.py:32](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/assistant/models.py#L32)). Messages exist solely in the context of their chat session; purging a session cleans up all recorded turns.
 
 ---
@@ -135,10 +138,10 @@ Being entirely candid about our current solution's boundaries:
 1. **BM25 vs. Semantic Embeddings**: While BM25 provides sub-millisecond retrieval without cold-start dependencies, it cannot capture cross-language queries or semantic expressions with novel phrasing that lack predefined synonyms.
 2. **Heuristic Prompt Injection Defense**: The regex detector in `assistant.safety` ([assistant/safety.py:23](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/assistant/safety.py#L23)) effectively stops known adversarial phrases like `CHN-1037`, but is vulnerable to token splitting, ciphering, or semantic rephrasing.
 3. **Parametric Normal Safety Stock**: The safety stock formula in `forecasts.services` assumes Gaussian demand distribution ($z = 1.65$). Intermittent and heavy-tailed automotive demand violates normality.
-4. **Order State Lifecycle**: We built draft order creation with atomic sequencing, but did not implement full confirmation workflows or credit limit verification.
+4. **Credit Limit Checks**: Omitted from purchase order confirmation as API Contract Sections 3 and 7.1–7.5 do not specify credit verification or error codes for order transitions.
 
 **What Two More Days Would Deliver**:
 - Implement hybrid search combining cached local embeddings (via sentence-transformers or provider embedding API) with BM25 Reciprocal Rank Fusion (RRF).
 - Deploy an on-device classifier or Llama-Guard model for content moderation and prompt injection detection.
 - Switch from parametric safety stock to empirical quantile regression ($q_{0.95}$) trained via pinball loss in LightGBM.
-- Build the full order state machine (`CONFIRMED`, `DISPATCHED`) with credit validation and idempotency key deduplication.
+- Expand the dealer trade portal with interactive buttons to trigger confirmation, dispatch, and delivery directly from the user interface.

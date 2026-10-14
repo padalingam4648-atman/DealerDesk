@@ -48,6 +48,7 @@ Container for purchase orders created by or for dealerships.
   - `order_number`: `CharField(max_length=50, unique=True, db_index=True)` formatted as `ORD-YYYYMMDD-NNNN`.
   - `dealer`: `ForeignKey(Dealer, on_delete=models.PROTECT, related_name="orders")`
   - `status`: `CharField(choices=['DRAFT', 'CONFIRMED', 'DISPATCHED', 'DELIVERED', 'CANCELLED'], default='DRAFT', db_index=True)`
+  - `stock_restored`: `BooleanField(default=False)` - Guards exact-once stock restoration on cancellation.
   - `created_at`, `updated_at`: ISO 8601 timestamps.
 - **`on_delete=PROTECT` Rationale**:
   Orders represent legal and financial transaction records. Deleting a dealership that has associated orders would orphan financial histories and compromise auditability; hence dealer deletion is protected.
@@ -72,6 +73,15 @@ Individual line item in an order.
   - `last_sequence`: `PositiveIntegerField(default=0)`.
 - **Purpose**:
   Maintains an atomic sequence counter per date in IST. Incremented under `select_for_update` within `transaction.atomic` to guarantee unique, collision-free `ORD-YYYYMMDD-NNNN` identifiers under high concurrency.
+
+### IdempotencyRecord (`orders.models.IdempotencyRecord`)
+- **Fields**:
+  - `key`: `CharField(max_length=255, unique=True, db_index=True)`
+  - `request_hash`: `CharField(max_length=64)` - SHA-256 hash of canonicalized JSON request payload.
+  - `order`: `ForeignKey(Order, on_delete=models.CASCADE, related_name="idempotency_records")`
+  - `created_at`: Timestamp.
+- **Purpose**:
+  Enforces exact-once semantics on `POST /api/orders/` under parallel duplicate requests and detects payload conflicts.
 
 ---
 
