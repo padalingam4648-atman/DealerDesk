@@ -16,9 +16,10 @@ SYNONYM_MAP = {
     "brakepads": ["brake", "pad", "pads"],
     "shoe": ["shoe", "shoes", "brake"],
     "shoes": ["shoe", "shoes", "brake"],
-    "filter": ["filter", "oil", "air"],
-    "filters": ["filter", "oil", "air"],
+    "filter": ["filter"],
+    "filters": ["filter"],
     "oilfilter": ["oil", "filter"],
+    "airfilter": ["air", "filter"],
     "chain": ["chain", "sprocket", "drive"],
     "chains": ["chain", "sprocket", "drive"],
     "sprocket": ["sprocket", "chain"],
@@ -241,7 +242,7 @@ def search_parts(query: str, vehicle: str | None = None, limit: int = 5) -> list
         p = products[sku]
         stock_qty = p.inventory.quantity if hasattr(p, "inventory") and p.inventory else 0
 
-        snippet = sanitize_description(p.description, max_chars=200)
+        snippet = sanitize_description(p.description, max_chars=100)
 
         results.append({
             "sku": p.sku,

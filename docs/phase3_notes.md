@@ -5,7 +5,7 @@
 Phase 3 implements an intelligent conversational assistant tailored for authorized motorcycle dealership parts departments (`POST /api/assistant/chat/`). The assistant supports parts discovery, real-time warehouse inventory checks, and draft purchase order creation using an LLM equipped with native function calling.
 
 Key Architectural Properties:
-- **Provider & Model**: Groq API using high-throughput open weights (`openai/gpt-oss-120b`, fallback to `llama-3.3-70b-versatile` or custom override via `ASSISTANT_MODEL`).
+- **Provider & Model**: Groq API using high-throughput open weights (`openai/gpt-oss-20b`, fallback to `openai/gpt-oss-120b` or custom override via `ASSISTANT_MODEL`).
 - **Resilient Fallback**: 25s per-call timeout with exponential backoff retries; graceful fallback on provider failure ensuring sub-60s SLA.
 - **Strict Tenant & Session Isolation**: Conversational memory is strictly isolated by `session_id` and bounded to the verified `dealer_id`.
 - **Zero Hallucination / Programmatic Grounding**: Every price and stock number is strictly sourced from live PostgreSQL queries during the active turn; historical figures are stripped as stale.

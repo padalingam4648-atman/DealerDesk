@@ -59,7 +59,7 @@ Key environment variables:
 - `SUPPLIER_API_URL`: Supplier mock endpoint (e.g., `http://127.0.0.1:8099`)
 - `SUPPLIER_API_KEY`: Supplier API authentication key
 - `GROQ_API_KEY`: Your Groq Cloud API key (required for Phase 3 Assistant)
-- `ASSISTANT_MODEL`: Optional model override (defaults to `openai/gpt-oss-120b`, fallback `llama-3.3-70b-versatile`)
+- `ASSISTANT_MODEL`: Optional model override (defaults to `openai/gpt-oss-20b`, with automatic rate-limit fallback)
 
 ---
 
@@ -131,8 +131,8 @@ The full order lifecycle engine (Part A2) implements robust concurrency control 
 ## LLM Provider & Architecture
 
 - **Provider**: **Groq Cloud**
-- **Default Model**: `openai/gpt-oss-120b` (specified in `dealerdesk/settings.py:98`)
-- **Fallback Models**: `llama-3.3-70b-versatile`, `llama-3.1-8b-instant`
+- **Default Model**: `openai/gpt-oss-20b` (specified in `dealerdesk/settings.py:96`)
+- **Alternative / Fallback Models**: `openai/gpt-oss-120b`, `qwen/qwen3.8-27b` (auto-fallback on rate limits)
 - **Retrieval Engine**: Pure Python in-memory BM25 index with token normalization (splitting model codes like `Duke390` $\rightarrow$ `duke 390`), automotive synonym mapping, and vehicle fitment scoring (+15 for direct match, +4 for universal, -50 for conflicting vehicles). Zero cold-start latency (< 3 ms index build).
 - **Grounding Verifier**: Verifies all cited SKUs against the database; enforces live tool execution during the turn; corrects or removes ungrounded prices and stocks.
 - **Safety**: Regex heuristic detector withholds planted prompt injections (`[description withheld: contains instructions]`). System prompt instructs LLM that catalogue data is untrusted.

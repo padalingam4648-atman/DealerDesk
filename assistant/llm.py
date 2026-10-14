@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import time
 from dataclasses import dataclass
 from django.conf import settings
@@ -68,7 +69,7 @@ def call_llm(
     model = (
         getattr(settings, "ASSISTANT_MODEL", "")
         or os.environ.get("ASSISTANT_MODEL", "")
-        or "openai/gpt-oss-120b"
+        or "openai/gpt-oss-20b"
     )
 
     max_attempts = 3
@@ -108,11 +109,37 @@ def call_llm(
                 tool_calls=parsed_tool_calls,
             )
 
-        except (RateLimitError, InternalServerError, APIConnectionError) as e:
+        except RateLimitError as e:
+            last_err = e
+            # If a heavy model was configured and hit TPM limit, immediately fallback to 20b
+            if model != "openai/gpt-oss-20b":
+                logger.warning(f"Groq RateLimitError on '{model}'. Falling back to 'openai/gpt-oss-20b' on retry.")
+                model = "openai/gpt-oss-20b"
+                time.sleep(1.0)
+                continue
+
+            wait_time = 2.0 * (attempt + 1)
+            match = re.search(r"try again in ([0-9.]+)s", str(e))
+            if match:
+                try:
+                    suggested_wait = float(match.group(1))
+                    if suggested_wait <= 10.0:
+                        wait_time = suggested_wait + 0.5
+                except ValueError:
+                    pass
+
+            if attempt < max_attempts - 1:
+                logger.warning(f"Transient Groq RateLimitError (attempt {attempt + 1}): {e}. Retrying in {wait_time:.1f}s...")
+                time.sleep(wait_time)
+            else:
+                logger.error(f"Groq RateLimitError after {max_attempts} attempts: {e}")
+                raise LLMUnavailableError("The assistant service is experiencing high load (rate limit). Please retry in a moment.")
+
+        except (InternalServerError, APIConnectionError) as e:
             last_err = e
             if attempt < max_attempts - 1:
                 wait_time = (attempt + 1) * 1.5
-                logger.warning(f"Transient Groq error (attempt {attempt + 1}): {e}. Retrying in {wait_time}s...")
+                logger.warning(f"Transient Groq server error (attempt {attempt + 1}): {e}. Retrying in {wait_time}s...")
                 time.sleep(wait_time)
             else:
                 logger.error(f"Groq API failed after {max_attempts} attempts: {e}")

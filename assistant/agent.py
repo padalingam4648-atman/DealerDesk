@@ -80,7 +80,8 @@ def run_chat_turn(session_id: str, dealer_id: int, message: str) -> dict:
     recorded_tool_results = []
     recorded_actions = []
     final_reply = ""
-    max_iterations = 6
+    max_iterations = 4
+    seen_tool_calls = set()
 
     for iteration in range(max_iterations):
         try:
@@ -115,11 +116,21 @@ def run_chat_turn(session_id: str, dealer_id: int, message: str) -> dict:
             llm_messages.append(assistant_msg_dict)
 
             for tc in response.tool_calls:
-                result, action = execute_tool(tc.name, tc.arguments, dealer_id=dealer.id)
-                recorded_tool_calls.append({
-                    "name": tc.name,
-                    "arguments": tc.arguments,
-                })
+                call_sig = (tc.name, json.dumps(tc.arguments, sort_keys=True))
+                if call_sig in seen_tool_calls:
+                    logger.info(f"Duplicate tool call {tc.name} suppressed in iteration {iteration}")
+                    result = {
+                        "note": f"You already executed {tc.name} with these arguments in this turn. Use the data already returned above to formulate your final answer to the dealer."
+                    }
+                    action = None
+                else:
+                    seen_tool_calls.add(call_sig)
+                    result, action = execute_tool(tc.name, tc.arguments, dealer_id=dealer.id)
+                    recorded_tool_calls.append({
+                        "name": tc.name,
+                        "arguments": tc.arguments,
+                    })
+
                 recorded_tool_results.append(result)
 
                 if action:

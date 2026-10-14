@@ -12,7 +12,9 @@ from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")  # real environment variables always win over .env
+load_dotenv(BASE_DIR / ".env")  # real environment variables win over .env
+if not os.environ.get("GROQ_API_KEY"):
+    load_dotenv(BASE_DIR / ".env", override=True)
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-insecure-key")
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
@@ -93,6 +95,6 @@ REST_FRAMEWORK = {
 # ---- Assignment settings --------------------------------------------------------------
 DATA_DIR = BASE_DIR / "data"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-ASSISTANT_MODEL = os.environ.get("ASSISTANT_MODEL", "openai/gpt-oss-120b")
+ASSISTANT_MODEL = os.environ.get("ASSISTANT_MODEL", "openai/gpt-oss-20b")
 SUPPLIER_API_URL = os.environ.get("SUPPLIER_API_URL", "http://127.0.0.1:8099")
 SUPPLIER_API_KEY = os.environ.get("SUPPLIER_API_KEY", "")
