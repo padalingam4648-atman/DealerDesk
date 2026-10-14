@@ -210,8 +210,7 @@ DealerDesk/
 │   ├── phase1_notes.md    # Phase 1 backend architecture
 │   ├── phase2_notes.md    # Phase 2 ML models & backtest analysis
 │   ├── phase3_notes.md    # Phase 3 Assistant architecture & safety
-│   ├── phase_a2_notes.md  # Phase A2 Order Engine architecture & state machine
-│   └── video_script.md    # Timed 5-minute video walkthrough script
+│   └── phase_a2_notes.md  # Phase A2 Order Engine architecture & state machine
 ├── scripts/
 │   └── chat_demo.py       # Live LLM conversation scenario demonstration script
 ├── DECISIONS.md           # Answers to the 8 required architectural questions
@@ -233,5 +232,4 @@ DealerDesk/
 
 ## Video Walkthrough
 Video: `<VIDEO_LINK>`
-*(See [docs/video_script.md](file:///c:/Users/PADALINGAM/Downloads/DealerDesk/docs/video_script.md) for the timed 5-minute spoken walkthrough script).*
 
